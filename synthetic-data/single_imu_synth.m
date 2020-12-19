@@ -5,17 +5,17 @@
 % Kalman filter to estimate orientation using simulating an IMU with gyros,
 % accelerometers and magnetometers
 % "Desarrollo de un Sistema Inercial de Referencia de Actitud basado en un
-% Estimador Óptimo No Lineal", specifically section tw: 
+% Estimador Óptimo No Lineal", specifically section two: 
 % Attitude Computation, Numerical Integration
 
 %% Use NaveGo functions
 matlabrc
 
-addpath ../../ins/
-addpath ../../ins-gnss/
-addpath ../../simulation/
-addpath ../../conversions/
-addpath ../../performance_analysis/
+addpath ../ins/
+addpath ../simulation/
+addpath ../conversions/
+addpath ../kalman/
+addpath ../performance_analysis/
 
 %% CONVERSION CONSTANTS
 
@@ -100,3 +100,21 @@ imu1.ini_align = [ref.roll(1) ref.pitch(1) ref.yaw(1)]; % Initial attitude align
 
 load imu1.mat
 
+figure(1)
+plot(imu1.t,imu1.fb(:,1), 'r', imu1.t, imu1.fb(:,2), 'b', imu1.t, imu1.fb(:,3), 'g')
+xlabel('Time [s]')
+grid on
+title('Acceleration raw measurements body frame [m/s^2]')
+legend('ax','ay','az')
+
+figure(2)
+plot(imu1.t,imu1.wb(:,1), 'r', imu1.t, imu1.wb(:,2), 'b', imu1.t, imu1.wb(:,3), 'g')
+xlabel('Time [s]')
+grid on
+title('Angular velocity measurements body frame [m/s^2]')
+legend('wx','wy','wz')
+
+
+%% SENSOR FUSION AND FILTER
+
+[nav] = imu_filter(imu1);
