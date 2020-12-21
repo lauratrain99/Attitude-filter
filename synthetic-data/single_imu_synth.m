@@ -2,8 +2,8 @@
 % Author: Laura Train
 % Date 15/11
 %% 
-% Kalman filter to estimate orientation using simulating an IMU with gyros,
-% accelerometers and magnetometers
+% Kalman filter to estimate orientation using simulating an IMU with gyros
+% and accelerometers 
 % "Desarrollo de un Sistema Inercial de Referencia de Actitud basado en un
 % Estimador Óptimo No Lineal", specifically section two: 
 % Attitude Computation, Numerical Integration
@@ -31,12 +31,10 @@ MS2KMH = 3.6;       % m/s to km/h
 
 %% REFERENCE DATA
 
-fprintf('NaveGo: loading reference dataset from a trajectory generator... \n')
-
 load ref.mat
 
 % ref.mat contains the reference data structure from which inertial
-% sensors and GNSS wil be simulated. It must contain the following fields:
+% sensors wil be simulated. It must contain the following fields:
 
 %         t: Nx1 time vector (seconds).
 %       lat: Nx1 latitude (radians).
@@ -50,7 +48,8 @@ load ref.mat
 %            Each row of DCMnb_m contains the 9 elements of a particular DCMnb
 %            matrix ordered as [a11 a21 a31 a12 a22 a32 a13 a23 a33].
 %      freq: sampling frequency (Hz).
-%% ADIS16405 IMU error profile
+
+%% ADIS16405: IMU1 error profile
 
 % IMU data structure:
 %         t: Ix1 time vector (seconds).
@@ -104,17 +103,93 @@ figure(1)
 plot(imu1.t,imu1.fb(:,1), 'r', imu1.t, imu1.fb(:,2), 'b', imu1.t, imu1.fb(:,3), 'g')
 xlabel('Time [s]')
 grid on
-title('Acceleration raw measurements body frame [m/s^2]')
+title('IMU1 Acceleration raw measurements body frame [m/s^2]')
 legend('ax','ay','az')
 
 figure(2)
 plot(imu1.t,imu1.wb(:,1), 'r', imu1.t, imu1.wb(:,2), 'b', imu1.t, imu1.wb(:,3), 'g')
 xlabel('Time [s]')
 grid on
+title('IMU1 Angular velocity measurements body frame [m/s^2]')
+legend('wx','wy','wz')
+
+%% ADIS16488 IMU2 error profile
+
+ADIS16488.arw      = 0.3  .* ones(1,3);     % Angle random walks [X Y Z] (deg/root-hour)
+ADIS16488.arrw     = zeros(1,3);            % Angle rate random walks [X Y Z] (deg/root-hour/s)
+ADIS16488.vrw      = 0.029.* ones(1,3);     % Velocity random walks [X Y Z] (m/s/root-hour)
+ADIS16488.vrrw     = zeros(1,3);            % Velocity rate random walks [X Y Z] (deg/root-hour/s)
+ADIS16488.gb_sta   = 0.2  .* ones(1,3);     % Gyro static biases [X Y Z] (deg/s)
+ADIS16488.ab_sta   = 16   .* ones(1,3);     % Acc static biases [X Y Z] (mg)
+ADIS16488.gb_dyn   = 6.5/3600 .* ones(1,3); % Gyro dynamic biases [X Y Z] (deg/s)
+ADIS16488.ab_dyn   = 0.1  .* ones(1,3);     % Acc dynamic biases [X Y Z] (mg)
+ADIS16488.gb_corr  = 100  .* ones(1,3);     % Gyro correlation times [X Y Z] (seconds)
+ADIS16488.ab_corr  = 100  .* ones(1,3);     % Acc correlation times [X Y Z] (seconds)
+ADIS16488.freq     = ref.freq;              % IMU operation frequency [X Y Z] (Hz)
+ADIS16488.m_psd    = 0.054 .* ones(1,3);    % Magnetometer noise density [X Y Z] (mgauss/root-Hz)
+
+% ref time is used to simulate IMU sensors
+ADIS16488.t = ref.t;                        % IMU time vector
+dt = mean(diff(ADIS16488.t));               % IMU sampling interval
+
+imu2 = imu_si_errors(ADIS16488, dt);        % Transform IMU manufacturer error units to SI units.
+
+imu2.ini_align_err = [1 1 5] .* D2R;                     % Initial attitude align errors for matrix P in Kalman filter, [roll pitch yaw] (radians)
+imu2.ini_align = [ref.roll(1) ref.pitch(1) ref.yaw(1)];  % Initial attitude align at t(1) (radians)
+
+%% IMU2 SYNTHETIC DATA
+
+load imu2.mat
+
+figure(1)
+plot(imu2.t,imu2.fb(:,1), 'r', imu2.t, imu2.fb(:,2), 'b', imu2.t, imu2.fb(:,3), 'g')
+xlabel('Time [s]')
+grid on
+title('Acceleration raw measurements body frame [m/s^2]')
+legend('ax','ay','az')
+
+figure(2)
+plot(imu2.t,imu2.wb(:,1), 'r', imu2.t, imu2.wb(:,2), 'b', imu2.t, imu2.wb(:,3), 'g')
+xlabel('Time [s]')
+grid on
 title('Angular velocity measurements body frame [m/s^2]')
 legend('wx','wy','wz')
 
-
 %% SENSOR FUSION AND FILTER
 
-[nav] = imu_filter(imu1);
+[nav1, kf1] = imu_filter(imu1);
+
+[nav2, kf2] = imu_filter(imu2);
+
+%% PLOTS
+
+figure(3)
+plot(nav1.t, nav1.qua(:,1), 'r', nav1.t, nav1.qua(:,2), 'b', nav1.t, nav1.qua(:,3), 'g', nav1.t, nav1.qua(:,4), 'k')
+xlabel('Time [s]')
+legend('q1', 'q2', 'q3', 'q4')
+grid minor
+title('ADIS16405 (IMU1) quaternions')
+
+figure(4)
+plot(nav1.t, nav1.roll, 'r', nav1.t, nav1.pitch, 'b', nav1.t, nav1.yaw, 'g')
+legend('roll [deg]', 'pitch [deg]', 'yaw [deg]')
+xlabel('Time [s]')
+grid minor
+title('ADIS16405 (IMU1) Euler angles')
+
+figure(5)
+plot(nav2.t, nav2.qua(:,1), 'r', nav2.t, nav2.qua(:,2), 'b', nav2.t, nav2.qua(:,3), 'g', nav2.t, nav2.qua(:,4), 'k')
+xlabel('Time [s]')
+legend('q1', 'q2', 'q3', 'q4')
+grid minor
+title('ADIS16488 (IMU2) quaternions')
+
+figure(6)
+plot(nav2.t, nav2.roll, 'r', nav2.t, nav2.pitch, 'b', nav2.t, nav2.yaw, 'g')
+legend('roll [deg]', 'pitch [deg]', 'yaw [deg]')
+xlabel('Time [s]')
+grid minor
+title('ADIS16488 (IMU2) Euler angles')
+
+
+

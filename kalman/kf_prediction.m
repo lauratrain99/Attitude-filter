@@ -17,6 +17,8 @@ function  kf = kf_prediction(kf, dt)
 %      Phi: 6x6 state transition matrix.
 %       Qd: 6x6 discrete process noise covariance matrix.
 
+%%
+
     kf.Phi = expm(kf.F * dt);
     kf.deltaxi = kf.Phi * kf.deltaxp;
     
