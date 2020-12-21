@@ -1,12 +1,11 @@
 %% ATTITUDE COMPUTATION
 % Author: Laura Train
-% Date 15/11
+% Date 21/12
 %% 
-% Kalman filter to estimate orientation using simulating an IMU with gyros
+% Kalman filter to estimate orientation simulating an IMU containing gyros
 % and accelerometers 
 % "Desarrollo de un Sistema Inercial de Referencia de Actitud basado en un
-% Estimador Óptimo No Lineal", specifically section two: 
-% Attitude Computation, Numerical Integration
+% Estimador Óptimo No Lineal"
 
 %% Use NaveGo functions
 matlabrc
@@ -105,13 +104,15 @@ xlabel('Time [s]')
 grid on
 title('IMU1 Acceleration raw measurements body frame [m/s^2]')
 legend('ax','ay','az')
+saveas(figure(1),'IMU1_accelerations_raw.jpg')
 
 figure(2)
 plot(imu1.t,imu1.wb(:,1), 'r', imu1.t, imu1.wb(:,2), 'b', imu1.t, imu1.wb(:,3), 'g')
 xlabel('Time [s]')
 grid on
-title('IMU1 Angular velocity measurements body frame [m/s^2]')
+title('IMU1 Angular velocity measurements body frame [rad/s]')
 legend('wx','wy','wz')
+saveas(figure(2),'IMU1_angularvelocities_raw.jpg')
 
 %% ADIS16488 IMU2 error profile
 
@@ -141,19 +142,21 @@ imu2.ini_align = [ref.roll(1) ref.pitch(1) ref.yaw(1)];  % Initial attitude alig
 
 load imu2.mat
 
-figure(1)
+figure(3)
 plot(imu2.t,imu2.fb(:,1), 'r', imu2.t, imu2.fb(:,2), 'b', imu2.t, imu2.fb(:,3), 'g')
 xlabel('Time [s]')
 grid on
-title('Acceleration raw measurements body frame [m/s^2]')
+title('IMU2 Acceleration raw measurements body frame [m/s^2]')
 legend('ax','ay','az')
+saveas(figure(3),'IMU2_accelerations_raw.jpg')
 
-figure(2)
+figure(4)
 plot(imu2.t,imu2.wb(:,1), 'r', imu2.t, imu2.wb(:,2), 'b', imu2.t, imu2.wb(:,3), 'g')
 xlabel('Time [s]')
 grid on
-title('Angular velocity measurements body frame [m/s^2]')
+title('IMU2 Angular velocity measurements body frame [rad/s]')
 legend('wx','wy','wz')
+saveas(figure(4),'IMU2_angularvelocities_raw.jpg')
 
 %% SENSOR FUSION AND FILTER
 
@@ -163,33 +166,49 @@ legend('wx','wy','wz')
 
 %% PLOTS
 
-figure(3)
+figure(5)
 plot(nav1.t, nav1.qua(:,1), 'r', nav1.t, nav1.qua(:,2), 'b', nav1.t, nav1.qua(:,3), 'g', nav1.t, nav1.qua(:,4), 'k')
 xlabel('Time [s]')
 legend('q1', 'q2', 'q3', 'q4')
 grid minor
 title('ADIS16405 (IMU1) quaternions')
+xlim([-20, imu1.t(end) + 20])
+ylim([-1.2 1.2])
+legend('location','southeast')
+saveas(figure(5),'IMU1_quaternions_EKF.jpg')
 
-figure(4)
+
+figure(6)
 plot(nav1.t, nav1.roll, 'r', nav1.t, nav1.pitch, 'b', nav1.t, nav1.yaw, 'g')
 legend('roll [deg]', 'pitch [deg]', 'yaw [deg]')
 xlabel('Time [s]')
 grid minor
 title('ADIS16405 (IMU1) Euler angles')
+xlim([-20, imu1.t(end) + 20])
+saveas(figure(6),'IMU1_EulerAngles_EKF.jpg')
 
-figure(5)
+
+figure(7)
 plot(nav2.t, nav2.qua(:,1), 'r', nav2.t, nav2.qua(:,2), 'b', nav2.t, nav2.qua(:,3), 'g', nav2.t, nav2.qua(:,4), 'k')
 xlabel('Time [s]')
 legend('q1', 'q2', 'q3', 'q4')
 grid minor
 title('ADIS16488 (IMU2) quaternions')
+xlim([-20, imu1.t(end) + 20])
+ylim([-1.2 1.2])
+legend('location','southeast')
+saveas(figure(7),'IMU2_quaternions_EKF.jpg')
 
-figure(6)
+
+
+figure(8)
 plot(nav2.t, nav2.roll, 'r', nav2.t, nav2.pitch, 'b', nav2.t, nav2.yaw, 'g')
 legend('roll [deg]', 'pitch [deg]', 'yaw [deg]')
 xlabel('Time [s]')
 grid minor
+xlim([-20, imu1.t(end) + 20])
 title('ADIS16488 (IMU2) Euler angles')
+saveas(figure(8),'IMU2_EulerAngles_EKF.jpg')
 
 
 
