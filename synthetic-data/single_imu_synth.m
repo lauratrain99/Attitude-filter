@@ -32,7 +32,7 @@ MS2KMH = 3.6;       % m/s to km/h
 
 load ref.mat
 
-% ref.mat contains the reference data structure from which inertial
+% ref.mat contains a reference data structure from which inertial
 % sensors wil be simulated. It must contain the following fields:
 
 %         t: Nx1 time vector (seconds).
