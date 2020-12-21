@@ -167,7 +167,7 @@ saveas(figure(4),'IMU2_angularvelocities_raw.jpg')
 %% PLOTS
 
 figure(5)
-plot(nav1.t, nav1.qua(:,1), 'r', nav1.t, nav1.qua(:,2), 'b', nav1.t, nav1.qua(:,3), 'g', nav1.t, nav1.qua(:,4), 'k')
+plot(nav1.t, nav1.qua(:,1), 'r', nav1.t, nav1.qua(:,2), 'c', nav1.t, nav1.qua(:,3), 'g', nav1.t, nav1.qua(:,4), 'k')
 xlabel('Time [s]')
 legend('q1', 'q2', 'q3', 'q4')
 grid minor
@@ -189,7 +189,7 @@ saveas(figure(6),'IMU1_EulerAngles_EKF.jpg')
 
 
 figure(7)
-plot(nav2.t, nav2.qua(:,1), 'r', nav2.t, nav2.qua(:,2), 'b', nav2.t, nav2.qua(:,3), 'g', nav2.t, nav2.qua(:,4), 'k')
+plot(nav2.t, nav2.qua(:,1), 'r', nav2.t, nav2.qua(:,2), 'c', nav2.t, nav2.qua(:,3), 'g', nav2.t, nav2.qua(:,4), 'k')
 xlabel('Time [s]')
 legend('q1', 'q2', 'q3', 'q4')
 grid minor
