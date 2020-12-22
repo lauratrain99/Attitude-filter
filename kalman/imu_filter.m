@@ -49,8 +49,8 @@ O = zeros(3);
 
 
 % Length of time vector
+LI = 1000;
 %LI = length(imu.t);
-LI = length(imu.t);
 
 
 % Preallocation of attitude vectors
