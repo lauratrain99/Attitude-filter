@@ -171,18 +171,9 @@ legend('location','southeast')
 
 figure(6)
 plot(imu1.t, euler(:,1), 'r', imu1.t, euler(:,2), 'b', imu1.t, euler(:,3), 'g')
-legend('roll [deg]', 'pitch [deg]', 'yaw [deg]')
+legend('roll [rad]', 'pitch [rad]', 'yaw [rad]')
 xlabel('Time [s]')
 grid minor
 title('ADIS16405 (IMU1) attitude computer Euler angles')
 
 
-[quat_corrected] = crassidis(imu1, nav1.deltaxp(:,1:3));
-
-figure(7)
-plot(imu1.t, quat_corrected(:,1), 'r', imu1.t, quat_corrected(:,2), 'c', imu1.t, quat_corrected(:,3), 'g', imu1.t, quat_corrected(:,4), 'k')
-xlabel('Time [s]')
-legend('q1', 'q2', 'q3', 'q4')
-grid minor
-title('ADIS16405 (IMU1) Crassidis corrected quaternions')
-legend('location','southeast')
