@@ -76,18 +76,24 @@ load ref.mat
 
 load imu1.mat
 
-
+imu1.ini_align = [0,0,0];
 wbx = zeros(length(imu1.t),1) + imu1.g_std(1)*randn(length(imu1.t),1);
 wby = zeros(length(imu1.t),1) + imu1.g_std(2)*randn(length(imu1.t),1);
 wbz = zeros(length(imu1.t),1) + imu1.g_std(3)*randn(length(imu1.t),1);
 
 imu1.wb = [wbx, wby, wbz];
 
-abx = zeros(length(imu1.t),1) + imu1.a_std(1)*randn(length(imu1.t),1);
-aby = zeros(length(imu1.t),1) + imu1.a_std(2)*randn(length(imu1.t),1);
-abz = 9.78*ones(length(imu1.t),1) + imu1.a_std(3)*randn(length(imu1.t),1);
+abx = zeros(length(imu1.t),1) + 0.01*randn(length(imu1.t),1);
+aby = zeros(length(imu1.t),1) + 0.01*randn(length(imu1.t),1);
+abz = 9.81*ones(length(imu1.t),1) + 0.01*randn(length(imu1.t),1);
 
 imu1.fb = [abx, aby, abz];
+
+mnx = 0.22*ones(length(imu1.t),1) + 0.01*randn(length(imu1.t),1);
+mny = zeros(length(imu1.t),1) + 0.01*randn(length(imu1.t),1);
+mnz = 0.17*ones(length(imu1.t),1) + 0.01*randn(length(imu1.t),1);
+
+imu1.mn = [mnx, mny, mnz];
 
 figure(1)
 plot(imu1.t,imu1.fb(:,1), 'r', imu1.t, imu1.fb(:,2), 'b', imu1.t, imu1.fb(:,3), 'g')
@@ -133,6 +139,7 @@ saveas(figure(2),'IMU1_angularvelocities_raw.jpg')
 
 load imu2.mat
 
+imu2.ini_align = [0,0,0];
 
 wbx = zeros(length(imu2.t),1) + imu2.g_std(1)*randn(length(imu2.t),1);
 wby = zeros(length(imu2.t),1) + imu2.g_std(2)*randn(length(imu2.t),1);
@@ -140,11 +147,17 @@ wbz = zeros(length(imu2.t),1) + imu2.g_std(3)*randn(length(imu2.t),1);
 
 imu2.wb = [wbx, wby, wbz];
 
-abx = zeros(length(imu2.t),1) + imu2.a_std(1)*randn(length(imu2.t),1);
-aby = zeros(length(imu2.t),1) + imu2.a_std(2)*randn(length(imu2.t),1);
-abz = 9.78*ones(length(imu2.t),1) + imu2.a_std(3)*randn(length(imu2.t),1);
+abx = zeros(length(imu2.t),1) + 0.01*randn(length(imu2.t),1);
+aby = zeros(length(imu2.t),1) + 0.01*randn(length(imu2.t),1);
+abz = 9.81*ones(length(imu2.t),1) + 0.01*randn(length(imu2.t),1);
 
 imu2.fb = [abx, aby, abz];
+
+mnx = 0.22*ones(length(imu2.t),1) + 0.01*randn(length(imu2.t),1);
+mny = zeros(length(imu2.t),1) + 0.01*randn(length(imu2.t),1);
+mnz = 0.17*ones(length(imu2.t),1) + 0.01*randn(length(imu2.t),1);
+
+imu2.mn = [mnx, mny, mnz];
 
 figure(3)
 plot(imu2.t,imu2.fb(:,1), 'r', imu2.t, imu2.fb(:,2), 'b', imu2.t, imu2.fb(:,3), 'g')

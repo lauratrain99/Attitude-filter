@@ -49,7 +49,7 @@ O = zeros(3);
 
 
 % Length of time vector
-LI = 1000;
+LI = 10000;
 %LI = length(imu.t);
 
 
@@ -90,30 +90,34 @@ nav.deltaxp = zeros(LI, 6);      % Evolution of Kalman filter a posteriori state
 nav.Phi  = zeros(LI, 36);        % Transition-state matrices, Phi
 nav.Pi = zeros(LI, 36);          % A priori covariance matrices, Pi
 nav.Pp = zeros(LI, 36);          % A posteriori covariance matrices, Pp
-nav.K  = zeros(LI, 18);          % Kalman gain matrices, K
-nav.S  = zeros(LI, 9);           % Innovation matrices, S
+nav.K  = zeros(LI, 36);          % Kalman gain matrices, K
+nav.S  = zeros(LI, 36);           % Innovation matrices, S
 nav.ob = zeros(LI, 1);           % Number of observable states at each acceleromter data
-nav.deltay_prop = zeros(LI,3);   % Propagated measurement error
-nav.deltar = zeros(LI,3);        % Error residual
-nav.deltay = zeros(LI,3);        % Estimated measurement error
+nav.deltay_prop = zeros(LI,6);   % Propagated measurement error
+nav.deltar = zeros(LI,6);        % Error residual
+nav.deltay = zeros(LI,6);        % Estimated measurement error
 nav.wb = zeros(LI, 3);           % Corrected angular velocity
 
 % Prior estimates for initial update
 kf.deltaxi = [zeros(1,3), imu.gb_dyn]';            % Error vector state
 kf.Pi = diag([imu.ini_align_err, imu.gb_dyn].^2);
 
-ge = 9.7803267715;
+ge = 9.81;
 g_n = [0; 0; ge];
 ab = imu.fb(1,:)';
-kf.deltay = DCMbn*ab - g_n;
+mN = 0.22;
+mD = 0.17;
+m_n = [mN; 0; mD];
+mn = imu.mn(1,:)';
+kf.deltay = [DCMbn*ab - g_n; DCMbn*mn - m_n];
 
 
 
 % Measurement matrix, constant value over time
-kf.H = [skewm(g_n) O];
+kf.H = [skewm(g_n) O; skewm(m_n) O];
 
 % Correction covariance matrix, constant value over time
-kf.R = diag(imu.a_std).^2;
+kf.R = diag([imu.a_std, imu.m_psd]).^2;
 
 % Propagate prior estimates to get xp(1) and Pp(1)
 kf = kf_update_acc( kf );
@@ -134,28 +138,26 @@ nav.deltay(1,:) = kf.deltay;
 kf.Q  = diag([imu.arw, imu.g_std, imu.gb_dyn].^2);
 
 
-for i = 2:LI 
+for i = 2:LI
 
       % IMU sampling interval
       dt = imu.t(i) - imu.t(i-1);
      
       % Correction for angular velocity with bias inestability
-      wb_corrected = imu.wb(i,:)' + gb_dyn;
+      wb_corrected = imu.wb(i,:)' - gb_dyn;
      
       % Attitude update 3-2-1 body sequence
       [qua, DCMbn, euler] = my_quat_update(wb_corrected, qua, dt);
-      roll  = euler(1);
-      pitch = euler(2);
-      yaw   = euler(3);
 
       % KALMAN FILTER      
           % PREDICTION         
-          kf.F = [skewm(-DCMbn) -I; O O];
-          kf.J = [-DCMbn -I O; O O I];
+          kf.F = [-skewm(wb_corrected) -I; O O];
+          kf.J = [DCMbn -I O; O O I];
           
           % CORRECTION
           ab = imu.fb(i,:)';
-          kf.deltay = DCMbn*ab - g_n;
+          mn = imu.mn(i,:)';
+          kf.deltay = [DCMbn*ab - g_n; DCMbn*mn - m_n];
           
           % Execution of the Extended Kalman filter
           %kf.deltaxp(1:3) = 0.0;           % states 1:3 are forced to be zero (error-state approach)
@@ -168,16 +170,17 @@ for i = 2:LI
           % ADD THE ERROR TO THE STATE
           % Quaternion corrections
           % Crassidis. Eq. 7.34 and A.174a.
-%           antm = [0 qua(3) -qua(2); -qua(3) 0 qua(1); qua(2) -qua(1) 0];
-%           qua = qua + 0.5 .* [qua(4)*eye(3) + antm; -1.*[qua(1) qua(2) qua(3)]] * kf.deltaxp(1:3);
-%           qua = qua / norm(qua);       % Brute-force normalization
+          antm = [0 qua(3) -qua(2); -qua(3) 0 qua(1); qua(2) -qua(1) 0];
+          qua = qua + 0.5 .* [qua(4)*eye(3) + antm; -1.*[qua(1) qua(2) qua(3)]] * kf.deltaxp(1:3);
+          qua = qua / norm(qua);       % Brute-force normalization
 
-          qua = qua + [kf.deltaxp(1:3)/2; 1];
-          qua = qua / norm(qua);
+%           qua_error = [kf.deltaxp(1:3)/2; 1];
+%           qua = qua + qua_error;
+%           qua = qua / norm(qua);
           
           % DCM correction
           DCMbn = qua2dcm(qua);
-         
+
           % Euler correction
           euler = qua2euler(qua);
           roll(i) = euler(1);
@@ -200,8 +203,8 @@ for i = 2:LI
           nav.Phi(i,:)          = reshape(kf.Phi, 1, 36);
           nav.Pi(i,:)           = reshape(kf.Pi, 1, 36);
           nav.Pp(i,:)           = reshape(kf.Pp, 1, 36);
-          nav.K(i,:)            = reshape(kf.K, 1, 18);
-          nav.S(i,:)            = reshape(kf.S, 1, 9);
+          nav.K(i,:)            = reshape(kf.K, 1, 36);
+          nav.S(i,:)            = reshape(kf.S, 1, 36);
           nav.ob(i,:)           = ob;
           nav.deltay_prop(i,:)  = kf.deltay_prop;
           nav.deltar(i,:)       = kf.deltar;
