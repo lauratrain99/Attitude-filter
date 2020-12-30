@@ -6,7 +6,7 @@ function  kf = kf_prediction(kf, dt)
 %       xp: 6x1 a posteriori state vector (old).
 %       Pp: 6x6 a posteriori error covariance matrix (old).
 %        F: 6x6 state transition matrix.
-%        Q: 6x6 process noise covariance matrix.
+%        Q: 9x9 process noise covariance matrix.
 %        J: 6x9 noise matrix.    
 %   	dt: sampling interval. 
 %
@@ -19,10 +19,10 @@ function  kf = kf_prediction(kf, dt)
 
 %%
 
-    kf.Phi = expm(kf.F * dt);
+    kf.Phi = expm(kf.F .* dt);
     kf.deltaxi = kf.Phi * kf.deltaxp;
     
-    kf.Qd = (kf.J * kf.Q * kf.J') .* dt; 
+    kf.Qd = (kf.G * kf.Q * kf.G'); 
     kf.Pi = kf.Phi * kf.Pp * kf.Phi' + kf.Qd;
     kf.Pi =  0.5 .* (kf.Pi + kf.Pi');               % Force Pi to be symmetric matrix
 

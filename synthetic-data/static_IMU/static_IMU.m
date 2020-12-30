@@ -75,25 +75,25 @@ load ref.mat
 
 
 load imu1.mat
-
+N = length(imu1.t);
 imu1.ini_align = [0,0,0];
-wbx = zeros(length(imu1.t),1) + imu1.g_std(1)*randn(length(imu1.t),1);
-wby = zeros(length(imu1.t),1) + imu1.g_std(2)*randn(length(imu1.t),1);
-wbz = zeros(length(imu1.t),1) + imu1.g_std(3)*randn(length(imu1.t),1);
+wbx = zeros(N,1) 
+wby = zeros(N,1); 
+wbz = zeros(N,1); 
 
 imu1.wb = [wbx, wby, wbz];
 
-abx = zeros(length(imu1.t),1) + 0.01*randn(length(imu1.t),1);
-aby = zeros(length(imu1.t),1) + 0.01*randn(length(imu1.t),1);
-abz = 9.81*ones(length(imu1.t),1) + 0.01*randn(length(imu1.t),1);
+abx = zeros(N,1); 
+aby = zeros(N,1); 
+abz = -9.81*ones(N,1); 
 
 imu1.fb = [abx, aby, abz];
 
-mnx = 0.22*ones(length(imu1.t),1) + 0.01*randn(length(imu1.t),1);
-mny = zeros(length(imu1.t),1) + 0.01*randn(length(imu1.t),1);
-mnz = 0.17*ones(length(imu1.t),1) + 0.01*randn(length(imu1.t),1);
-
-imu1.mn = [mnx, mny, mnz];
+% mnx = 0.22*ones(length(imu1.t),1);
+% mny = zeros(length(imu1.t),1);
+% mnz = 0.17*ones(length(imu1.t),1);
+% 
+% imu1.mn = [mnx, mny, mnz];
 
 figure(1)
 plot(imu1.t,imu1.fb(:,1), 'r', imu1.t, imu1.fb(:,2), 'b', imu1.t, imu1.fb(:,3), 'g')
@@ -112,7 +112,13 @@ title('IMU1 Angular velocity measurements body frame [rad/s]')
 legend('wx','wy','wz')
 saveas(figure(2),'IMU1_angularvelocities_raw.jpg')
 
-
+% figure(3)
+% plot(imu1.t,imu1.mn(:,1), 'r', imu1.t, imu1.mn(:,2), 'b', imu1.t, imu1.mn(:,3), 'g')
+% xlabel('Time [s]')
+% grid on
+% title('IMU1 Local magnetic field [Gauss]')
+% legend('mx','my','mz')
+% saveas(figure(3),'IMU1_magnetometer_raw.jpg')
 %% ADIS16488 IMU2 error profile
 
 % IMU data structure:
@@ -141,39 +147,39 @@ load imu2.mat
 
 imu2.ini_align = [0,0,0];
 
-wbx = zeros(length(imu2.t),1) + imu2.g_std(1)*randn(length(imu2.t),1);
-wby = zeros(length(imu2.t),1) + imu2.g_std(2)*randn(length(imu2.t),1);
-wbz = zeros(length(imu2.t),1) + imu2.g_std(3)*randn(length(imu2.t),1);
+wbx = zeros(length(imu2.t),1);
+wby = zeros(length(imu2.t),1);
+wbz = zeros(length(imu2.t),1);
 
 imu2.wb = [wbx, wby, wbz];
 
-abx = zeros(length(imu2.t),1) + 0.01*randn(length(imu2.t),1);
-aby = zeros(length(imu2.t),1) + 0.01*randn(length(imu2.t),1);
-abz = 9.81*ones(length(imu2.t),1) + 0.01*randn(length(imu2.t),1);
+abx = zeros(length(imu2.t),1);
+aby = zeros(length(imu2.t),1);
+abz = -9.81*ones(length(imu2.t),1);
 
 imu2.fb = [abx, aby, abz];
 
-mnx = 0.22*ones(length(imu2.t),1) + 0.01*randn(length(imu2.t),1);
-mny = zeros(length(imu2.t),1) + 0.01*randn(length(imu2.t),1);
-mnz = 0.17*ones(length(imu2.t),1) + 0.01*randn(length(imu2.t),1);
+% mnx = 0.22*ones(length(imu2.t),1);
+% mny = zeros(length(imu2.t),1);
+% mnz = 0.17*ones(length(imu2.t),1);
+% 
+% imu2.mn = [mnx, mny, mnz];
 
-imu2.mn = [mnx, mny, mnz];
-
-figure(3)
+figure(4)
 plot(imu2.t,imu2.fb(:,1), 'r', imu2.t, imu2.fb(:,2), 'b', imu2.t, imu2.fb(:,3), 'g')
 xlabel('Time [s]')
 grid on
 title('IMU2 Acceleration raw measurements body frame [m/s^2]')
 legend('ax','ay','az')
-saveas(figure(3),'IMU1_accelerations_raw.jpg')
+saveas(figure(4),'IMU1_accelerations_raw.jpg')
 
-figure(4)
+figure(5)
 plot(imu2.t,imu2.wb(:,1), 'r', imu2.t, imu2.wb(:,2), 'b', imu2.t, imu2.wb(:,3), 'g')
 xlabel('Time [s]')
 grid on
 title('IMU2 Angular velocity measurements body frame [rad/s]')
 legend('wx','wy','wz')
-saveas(figure(4),'IMU1_angularvelocities_raw.jpg')
+saveas(figure(5),'IMU1_angularvelocities_raw.jpg')
 
 %% SENSOR FUSION AND FILTER
 
@@ -181,9 +187,11 @@ saveas(figure(4),'IMU1_angularvelocities_raw.jpg')
 
 [nav2, kf2] = imu_filter(imu2);
 
+
+
 %% PLOTS
 
-figure(5)
+figure(6)
 plot(nav1.t, nav1.qua(:,1), 'r', nav1.t, nav1.qua(:,2), 'c', nav1.t, nav1.qua(:,3), 'g', nav1.t, nav1.qua(:,4), 'k')
 xlabel('Time [s]')
 legend('q1', 'q2', 'q3', 'q4')
@@ -192,29 +200,29 @@ title('ADIS16405 (IMU1) quaternions')
 %xlim([-20, imu1.t(end) + 20])
 ylim([-1.2 1.2])
 legend('location','southeast')
-saveas(figure(5),'IMU1_quaternions_EKF.jpg')
+saveas(figure(6),'IMU1_quaternions_EKF.jpg')
 
 
-figure(6)
+figure(7)
 plot(nav1.t, nav1.roll, 'r', nav1.t, nav1.pitch, 'b', nav1.t, nav1.yaw, 'g')
 legend('roll [deg]', 'pitch [deg]', 'yaw [deg]')
 xlabel('Time [s]')
 grid minor
 title('ADIS16405 (IMU1) Euler angles')
 %xlim([-20, imu1.t(end) + 20])
-saveas(figure(6),'IMU1_EulerAngles_EKF.jpg')
+saveas(figure(7),'IMU1_EulerAngles_EKF.jpg')
 
-figure(7)
+figure(8)
 plot(nav2.t, nav2.roll, 'r', nav2.t, nav2.pitch, 'b', nav2.t, nav2.yaw, 'g')
 legend('roll [deg]', 'pitch [deg]', 'yaw [deg]')
 xlabel('Time [s]')
 grid minor
 title('ADIS16488 (IMU2) Euler angles')
 %xlim([-20, imu1.t(end) + 20])
-saveas(figure(7),'IMU2_EulerAngles_EKF.jpg')
+saveas(figure(8),'IMU2_EulerAngles_EKF.jpg')
 
 
-figure(8)
+figure(9)
 plot(nav2.t, nav2.qua(:,1), 'r', nav2.t, nav2.qua(:,2), 'c', nav2.t, nav2.qua(:,3), 'g', nav2.t, nav2.qua(:,4), 'k')
 xlabel('Time [s]')
 legend('q1', 'q2', 'q3', 'q4')
@@ -223,7 +231,7 @@ title('ADIS16488 (IMU2) quaternions')
 %xlim([-20, imu1.t(end) + 20])
 ylim([-1.2 1.2])
 legend('location','southeast')
-saveas(figure(8),'IMU2_quaternions_EKF.jpg')
+saveas(figure(9),'IMU2_quaternions_EKF.jpg')
 
 for i = 1:length(nav1.t)
     nav1.quat_error_norm(i,1) = norm(nav1.deltaxp(i,:));
@@ -233,7 +241,7 @@ for i = 1:length(nav2.t)
     nav2.quat_error_norm(i,1) = norm(nav2.deltaxp(i,:));
 end
 
-figure(9)
+figure(10)
 plot(nav1.t, nav1.quat_error_norm, 'r', nav2.t, nav2.quat_error_norm, 'b')
 legend('\deltaq IMU1', '\deltaq IMU2')
 xlabel('Time [s]')

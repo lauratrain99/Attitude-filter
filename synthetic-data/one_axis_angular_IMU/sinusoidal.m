@@ -98,23 +98,21 @@ imu1.ini_align = [0 0 0]; % Initial attitude align at t(1) (radians).
 %% GENERATE SYNTHETIC DATA
 % Generate N samples at a sampling rate of Fs with a sinusoidal frequency
 % of Fc.
-N = 10000;
-Fs = 100;
-Fc = 0.25;
 
-imu1.t = (0:(1/Fs):((N-1)/Fs)).';
+load('zAxisRotation.mat')
 
-imu1.fb(:,1) = zeros(N, 1) + imu1.a_std(1)*randn(N,1);
-imu1.fb(:,2) = zeros(N, 1) + imu1.a_std(2)*randn(N,1);
-imu1.fb(:,3) = 9.81*ones(N,1) + imu1.a_std(3)*randn(N,1);
+%%
+imu1.t = zAxisRotation(:,1);
+N = length(imu1.t);
+imu1.wb(:,1) = zAxisRotation(:,2) 
+imu1.wb(:,2) = zAxisRotation(:,3) 
+imu1.wb(:,3) = zAxisRotation(:,4)
+imu1.fb(:,1) = zAxisRotation(:,5)
+imu1.fb(:,2) = zAxisRotation(:,6) 
+imu1.fb(:,3) = zAxisRotation(:,7) 
 
-imu1.wb(:,1) = pi/2*ones(N,1) + imu1.g_std(1)*randn(N,1);
-imu1.wb(:,2) = zeros(N, 1) + imu1.g_std(2)*randn(N,1);
-imu1.wb(:,3) = zeros(N, 1) + imu1.g_std(3)*randn(N,1);
 
-imu1.mn(:,1) = 0.22*ones(N,1) + imu1.m_psd(1)*randn(N,1);
-imu1.mn(:,2) = zeros(N, 1) + imu1.m_psd(2)*randn(N,1);
-imu1.mn(:,3) = 0.17*ones(N,1) + imu1.m_psd(3)*randn(N,1);
+
 
 
 figure(1)
@@ -176,4 +174,13 @@ xlabel('Time [s]')
 grid minor
 title('ADIS16405 (IMU1) attitude computer Euler angles')
 
+for i = 1:length(nav1.t)
+    nav1.quat_error_norm(i,1) = norm(nav1.deltaxp(i,:));
+end
 
+figure(10)
+plot(nav1.t, nav1.quat_error_norm, 'r')
+xlabel('Time [s]')
+grid minor
+%xlim([-20, nav1.t(end) + 20])
+title('Quaternion error \deltaq IMU')
