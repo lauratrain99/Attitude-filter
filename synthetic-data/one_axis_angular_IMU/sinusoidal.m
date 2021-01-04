@@ -4,7 +4,7 @@
 %% 
 % Kalman filter to estimate orientation simulating an IMU containing gyros
 % and accelerometers 
-% Simple sinusoidal angular velocity in one axis
+% Constat angular velocity in x axis
 
 %% Use NaveGo functions
 matlabrc
@@ -99,17 +99,17 @@ imu1.ini_align = [0 0 0]; % Initial attitude align at t(1) (radians).
 % Generate N samples at a sampling rate of Fs with a sinusoidal frequency
 % of Fc.
 
-load('zAxisRotation.mat')
+load('xAxisRotation.mat')
 
 %%
-imu1.t = zAxisRotation(:,1);
+imu1.t = xAxisRotation(:,1);
 N = length(imu1.t);
-imu1.wb(:,1) = zAxisRotation(:,2) 
-imu1.wb(:,2) = zAxisRotation(:,3) 
-imu1.wb(:,3) = zAxisRotation(:,4)
-imu1.fb(:,1) = zAxisRotation(:,5)
-imu1.fb(:,2) = zAxisRotation(:,6) 
-imu1.fb(:,3) = zAxisRotation(:,7) 
+imu1.wb(:,1) = xAxisRotation(:,2) + imu1.g_std(1)*randn(N,1);
+imu1.wb(:,2) = xAxisRotation(:,3) + imu1.g_std(2)*randn(N,1);
+imu1.wb(:,3) = xAxisRotation(:,4) + imu1.g_std(3)*randn(N,1);
+imu1.fb(:,1) = xAxisRotation(:,5) + imu1.a_std(1)*randn(N,1);
+imu1.fb(:,2) = xAxisRotation(:,6) + imu1.a_std(2)*randn(N,1);
+imu1.fb(:,3) = xAxisRotation(:,7) + imu1.a_std(3)*randn(N,1);
 
 
 
@@ -168,19 +168,40 @@ legend('location','southeast')
 
 
 figure(6)
-plot(imu1.t, euler(:,1), 'r', imu1.t, euler(:,2), 'b', imu1.t, euler(:,3), 'g')
-legend('roll [rad]', 'pitch [rad]', 'yaw [rad]')
+plot(imu1.t, rad2deg(euler(:,1)), 'r', imu1.t, rad2deg(euler(:,2)), 'b', imu1.t, rad2deg(euler(:,3)), 'g')
+legend('roll [deg]', 'pitch [deg]', 'yaw [deg]')
 xlabel('Time [s]')
 grid minor
 title('ADIS16405 (IMU1) attitude computer Euler angles')
 
 for i = 1:length(nav1.t)
-    nav1.quat_error_norm(i,1) = norm(nav1.deltaxp(i,:));
+    nav1.quat_error_norm(i,1) = norm(nav1.deltaxp(1:3,:));
+    nav1.dyn_bias_norm(i,1) = norm(nav1.deltaxp(4:6,:));
 end
 
-figure(10)
-plot(nav1.t, nav1.quat_error_norm, 'r')
+
+figure(7)
+plot(nav1.t, nav1.quat_error_norm, 'r', nav1.t, nav1.dyn_bias_norm, 'b')
 xlabel('Time [s]')
 grid minor
+legend('\deltaq','\delta\zeta')
 %xlim([-20, nav1.t(end) + 20])
-title('Quaternion error \deltaq IMU')
+title('Errors')
+
+
+figure(8)
+plot(imu1.t, quat(:,1), 'r', imu1.t, quat(:,2), 'c', imu1.t, quat(:,3), 'g', imu1.t, quat(:,4), 'k', ...
+     nav1.t, nav1.qua(:,1), '--r', nav1.t, nav1.qua(:,2), '--c', nav1.t, nav1.qua(:,3), '--g', nav1.t, nav1.qua(:,4), '--k')
+xlabel('Time [s]')
+legend('q1', 'q2', 'q3', 'q4','q1 Kalman','q2 Kalman','q3 Kalman', 'q4 Kalman')
+grid minor
+title('Attitude computer vs Kalman filter. Quaternions')
+legend('location','southeast')
+
+figure(9)
+plot(imu1.t, rad2deg(euler(:,1)), 'r', imu1.t, rad2deg(euler(:,2)), 'b', imu1.t, rad2deg(euler(:,3)), 'g', ...
+     nav1.t, nav1.roll, '--r', nav1.t, nav1.pitch, '--b', nav1.t, nav1.yaw, '--g')
+legend('roll', 'pitch', 'yaw', 'roll Kalman', 'pitch Kalman', 'yaw Kalman')
+xlabel('Time [s]')
+grid minor
+title('Attitude computer vs Kalman filter. Euler angles [deg]')

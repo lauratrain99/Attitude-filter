@@ -1,6 +1,6 @@
 %% ATTITUDE COMPUTATION
 % Author: Laura Train
-% Date 21/12
+% Date  21/12 .
 %% 
 % Kalman filter to estimate orientation simulating an IMU containing gyros
 % and accelerometers. Simulate a static IMU with
@@ -75,17 +75,18 @@ load ref.mat
 
 
 load imu1.mat
-N = length(imu1.t);
+N = 10000;
+imu1.t = linspace(0,10,N);
 imu1.ini_align = [0,0,0];
-wbx = zeros(N,1) 
-wby = zeros(N,1); 
-wbz = zeros(N,1); 
+wbx = zeros(N,1) + imu1.g_std(1)*randn(N,1);
+wby = zeros(N,1) + imu1.g_std(2)*randn(N,1); 
+wbz = zeros(N,1) + imu1.g_std(3)*randn(N,1); 
 
 imu1.wb = [wbx, wby, wbz];
 
-abx = zeros(N,1); 
-aby = zeros(N,1); 
-abz = -9.81*ones(N,1); 
+abx = zeros(N,1) + imu1.a_std(1)*randn(N,1);
+aby = zeros(N,1) + imu1.a_std(2)*randn(N,1); 
+abz = -9.81*ones(N,1) + imu1.a_std(3)*randn(N,1);
 
 imu1.fb = [abx, aby, abz];
 
@@ -144,18 +145,20 @@ saveas(figure(2),'IMU1_angularvelocities_raw.jpg')
 % ini_align_err: 1x3 initial attitude errors at t(1), [roll pitch yaw] (rad).
 
 load imu2.mat
-
+N = 10000;
+imu2.t = linspace(0,10,N);
 imu2.ini_align = [0,0,0];
 
-wbx = zeros(length(imu2.t),1);
-wby = zeros(length(imu2.t),1);
-wbz = zeros(length(imu2.t),1);
+wbx = zeros(N,1) + imu2.g_std(1)*randn(N,1);
+wby = zeros(N,1) + imu2.g_std(2)*randn(N,1);
+wbz = zeros(N,1) + imu2.g_std(3)*randn(N,1);
+
 
 imu2.wb = [wbx, wby, wbz];
 
-abx = zeros(length(imu2.t),1);
-aby = zeros(length(imu2.t),1);
-abz = -9.81*ones(length(imu2.t),1);
+abx = zeros(N,1) + imu2.a_std(1)*randn(N,1);
+aby = zeros(N,1) + imu2.a_std(2)*randn(N,1);
+abz = -9.81*ones(N,1) + imu2.a_std(3)*randn(N,1);
 
 imu2.fb = [abx, aby, abz];
 

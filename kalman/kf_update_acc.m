@@ -25,11 +25,13 @@ function  kf = kf_update_acc(kf)
 kf.S = (kf.R + kf.H * kf.Pi * kf.H');
 kf.K = (kf.Pi * kf.H') * (kf.S)^(-1);
 
-kf.deltay_prop = kf.H * kf.deltaxi;
-kf.deltar = kf.deltay - kf.deltay_prop;
-kf.deltaxp = kf.deltaxi + kf.K * kf.deltar;
+%kf.deltay_prop = kf.H * kf.deltaxi;
+kf.deltar = kf.deltay;
+%- kf.deltay_prop;
+kf.deltaxp = kf.K * kf.deltar + kf.deltaxi;
 
-kf.Pp = kf.Pi - kf.K * kf.H * kf.Pi;
+kf.Pp = (eye(6) - kf.K * kf.H)*kf.Pi;
+%kf.Pp = kf.Pi - kf.K * kf.S * kf.K';
 kf.Pp =  0.5 .* (kf.Pp + kf.Pp');               % Force Pi to be a symmetric matrix
 
 

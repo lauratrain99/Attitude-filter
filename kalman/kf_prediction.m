@@ -22,7 +22,7 @@ function  kf = kf_prediction(kf, dt)
     kf.Phi = expm(kf.F .* dt);
     kf.deltaxi = kf.Phi * kf.deltaxp;
     
-    kf.Qd = (kf.G * kf.Q * kf.G'); 
+    kf.Qd = (kf.G * kf.Q * kf.G') .* dt; 
     kf.Pi = kf.Phi * kf.Pp * kf.Phi' + kf.Qd;
     kf.Pi =  0.5 .* (kf.Pi + kf.Pi');               % Force Pi to be symmetric matrix
 
