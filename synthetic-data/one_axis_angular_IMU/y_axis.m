@@ -1,11 +1,10 @@
 %% ATTITUDE COMPUTATION
 % Author: Laura Train
-% Date  21/12 .
+% Date 04/01
 %% 
-% Kalman filter to estimate orientation simulating an IMU containing gyros
-% and accelerometers. Simulate a static IMU with
-% "Desarrollo de un Sistema Inercial de Referencia de Actitud basado en un
-% Estimador Óptimo No Lineal"
+% Kalman filter to estimate orientation simulating an IMU containing three-
+% axis gyro, accelerometer and magnetometer 
+% Constant angular velocity in y axis
 
 %% Use NaveGo functions
 matlabrc
@@ -22,14 +21,14 @@ imu1.ini_align_err = deg2rad([0.5, 0.5, 0.5]);
 imu1.g_std = [0.05, 0.05, 0.05];
 imu1.a_std = [0.01, 0.01, 0.01];
 imu1.m_std = [0.002, 0.002, 0.002];
-imu1.ini_align = deg2rad([0, 0, 0]);
+imu1.ini_align = deg2rad([1, 2, 3]);
 imu1.gb_dyn = [0.001, 0.001, 0.001]; 
 
 imu1.t = 0:1/100:10;
 N = length(imu1.t);
 
 imu1.wb(:,1) = zeros(N, 1);
-imu1.wb(:,2) = zeros(N, 1);
+imu1.wb(:,2) = 4*pi/10*ones(N,1);
 imu1.wb(:,3) = zeros(N, 1);
 
 [imu1] = IMU_simulator(imu1);
@@ -87,14 +86,14 @@ for i = 1:length(nav1.t)
 end
 
 
-figure(4)
+figure(3)
 plot(nav1.t, nav1.quat_error_norm, 'r', nav1.t, nav1.dyn_bias_norm, 'b')
 xlabel('Time [s]')
 grid minor
 legend('\deltaq','\delta\zeta')
 title('Errors')
 
-figure(5)
+figure(4)
 plot(imu1.t, quat(:,1), 'r', imu1.t, quat(:,2), 'c', imu1.t, quat(:,3), 'g', imu1.t, quat(:,4), 'k', ...
      nav1.t, nav1.qua(:,1), 'or', nav1.t, nav1.qua(:,2), 'oc', nav1.t, nav1.qua(:,3), 'og', nav1.t, nav1.qua(:,4), 'ok')
 xlabel('Time [s]')
@@ -103,7 +102,7 @@ grid minor
 title('Attitude computer vs Kalman filter. Quaternions')
 legend('location','southeast')
 
-figure(6)
+figure(5)
 plot(imu1.t, rad2deg(euler(:,1)), 'r', imu1.t, rad2deg(euler(:,2)), 'b', imu1.t, rad2deg(euler(:,3)), 'g', ...
      nav1.t, nav1.roll, 'or', nav1.t, nav1.pitch, 'ob', nav1.t, nav1.yaw, 'og')
 legend('roll', 'pitch', 'yaw', 'roll Kalman', 'pitch Kalman', 'yaw Kalman')

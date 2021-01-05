@@ -7,6 +7,7 @@ function [nav , kf] = imu_filter(imu)
 %             t: Ix1 time vector (seconds).
 %            fb: Ix3 accelerations vector in body frame XYZ (m/s^2).
 %            wb: Ix3 turn rates vector in body frame XYZ (radians/s).
+%           arw: 1x3 angle random walks (rad/s/root-Hz).
 %         g_std: 1x3 gyros standard deviations (radians/s).
 %         a_std: 1x3 accrs standard deviations (m/s^2).
 %        gb_dyn: 1x3 gyros dynamic biases or bias instabilities (radians/s).
@@ -90,10 +91,10 @@ nav.deltaxp = zeros(LI, 6);      % Evolution of Kalman filter a posteriori state
 nav.Phi  = zeros(LI, 36);        % Transition-state matrices, Phi
 nav.Pi = zeros(LI, 36);          % A priori covariance matrices, Pi
 nav.Pp = zeros(LI, 36);          % A posteriori covariance matrices, Pp
-nav.K  = zeros(LI, 18);          % Kalman gain matrices, K
-nav.S  = zeros(LI, 9);           % Innovation matrices, S
+nav.K  = zeros(LI, 36);          % Kalman gain matrices, K
+nav.S  = zeros(LI, 36);           % Innovation matrices, S
 nav.ob = zeros(LI, 1);           % Number of observable states at each acceleromter data
-nav.deltar = zeros(LI,3);        % Error residual
+nav.deltar = zeros(LI,6);        % Error residual
 nav.wb = zeros(LI, 3);           % Corrected angular velocity
 
 % Prior estimates for initial update
@@ -101,17 +102,21 @@ kf.deltaxi = [zeros(1,3), imu.gb_dyn]';            % Error vector state
 kf.Pi = diag([imu.ini_align_err, imu.gb_dyn].^2);
 
 ge = 9.81;
+mN = 0.22;
+mD = 0.17;
 g_n = [0; 0; ge];
+m_n = [mN; 0; mD];
 ab = imu.fb(1,:)';
-kf.deltar = -DCMbn*ab - g_n;
+mb = imu.mb(1,:)';
+kf.deltar = [-DCMbn*ab - g_n; DCMbn*mb - m_n];
 
 
 
 % Measurement matrix, constant value over time
-kf.H = [skewm(g_n) O];
+kf.H = [skewm(g_n) O; skewm(m_n) O];
 
 % Correction covariance matrix, constant value over time
-kf.R = diag([imu.a_std]).^2;
+kf.R = diag([imu.a_std, imu.m_std]).^2;
 %kf.R = diag([0.0001, 0.0001, 0.0001]).^2;
 
 % Propagate prior estimates to get xp(1) and Pp(1)
@@ -153,7 +158,8 @@ for i = 2:LI
           
           % CORRECTION
           ab = imu.fb(i,:)';
-          kf.deltar = -DCMbn*ab - g_n;
+          mb = imu.mb(i,:)';
+          kf.deltar = [-DCMbn*ab - g_n; DCMbn*mb - m_n];
           
           % Execution of the Extended Kalman filter
           kf.deltaxp = zeros(length(kf.deltaxp),1);           % states 1:3 are forced to be zero (error-state approach)
@@ -199,8 +205,8 @@ for i = 2:LI
           nav.Phi(i,:)          = reshape(kf.Phi, 1, 36);
           nav.Pi(i,:)           = reshape(kf.Pi, 1, 36);
           nav.Pp(i,:)           = reshape(kf.Pp, 1, 36);
-          nav.K(i,:)            = reshape(kf.K, 1, 18);
-          nav.S(i,:)            = reshape(kf.S, 1, 9);
+          nav.K(i,:)            = reshape(kf.K, 1, 36);
+          nav.S(i,:)            = reshape(kf.S, 1, 36);
           nav.ob(i,:)           = ob;
           nav.deltar(i,:)       = kf.deltar;
           nav.wb(i,:)           = wb_corrected;
