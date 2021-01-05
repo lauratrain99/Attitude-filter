@@ -94,9 +94,7 @@ nav.Pp = zeros(LI, 36);          % A posteriori covariance matrices, Pp
 nav.K  = zeros(LI, 18);          % Kalman gain matrices, K
 nav.S  = zeros(LI, 9);           % Innovation matrices, S
 nav.ob = zeros(LI, 1);           % Number of observable states at each acceleromter data
-%nav.deltay_prop = zeros(LI,3);   % Propagated measurement error
 nav.deltar = zeros(LI,3);        % Error residual
-nav.deltay = zeros(LI,3);        % Estimated measurement error
 nav.wb = zeros(LI, 3);           % Corrected angular velocity
 
 % Prior estimates for initial update
@@ -106,7 +104,7 @@ kf.Pi = diag([imu.ini_align_err, imu.gb_dyn].^2);
 ge = 9.81;
 g_n = [0; 0; ge];
 ab = imu.fb(1,:)';
-kf.deltay = -DCMbn*ab - g_n;
+kf.deltar = -DCMbn*ab - g_n;
 
 
 
@@ -115,7 +113,7 @@ kf.H = [skewm(g_n) O];
 
 % Correction covariance matrix, constant value over time
 kf.R = diag([imu.a_std]).^2;
-kf.R = diag([0.0001, 0.0001, 0.0001]).^2;
+%kf.R = diag([0.0001, 0.0001, 0.0001]).^2;
 
 % Propagate prior estimates to get xp(1) and Pp(1)
 kf = kf_update_acc( kf );
@@ -128,13 +126,13 @@ nav.Pi = reshape(kf.Pi, 1, 36);
 
 nav.deltaxp(1,:) = kf.deltaxp;
 nav.Pp(1,:) = reshape(kf.Pp, 1, 36);
-nav.deltay(1,:) = kf.deltay;
-
+nav.deltar(1,:) = kf.deltar;
+nav.wb(1,:) = imu.wb(1,:)' - gb_dyn;
 
 
 % Prediction covariance matrix, constant value over time
 kf.Q  = diag([imu.g_std, imu.gb_dyn].^2);
-kf.Q  = diag([1, 1, 1, 1, 1, 1].^2);
+%kf.Q  = diag([1, 1, 1, 1, 1, 1].^2);
 
 
 for i = 2:LI
@@ -150,13 +148,13 @@ for i = 2:LI
 
       % KALMAN FILTER      
           % PREDICTION         
-          kf.F = [-skewm(wb_corrected) -I; O O];
+          kf.F = [skewm(wb_corrected) -I; O O];
           %kf.J = [-DCMbn -I O; O O I];
           kf.G = [-I O; O I];
           
           % CORRECTION
           ab = imu.fb(i,:)';
-          kf.deltay = -DCMbn*ab - g_n;
+          kf.deltar = -DCMbn*ab - g_n;
           
           % Execution of the Extended Kalman filter
           kf.deltaxp = zeros(length(kf.deltaxp),1);           % states 1:3 are forced to be zero (error-state approach)
@@ -205,9 +203,7 @@ for i = 2:LI
           nav.K(i,:)            = reshape(kf.K, 1, 18);
           nav.S(i,:)            = reshape(kf.S, 1, 9);
           nav.ob(i,:)           = ob;
-          %nav.deltay_prop(i,:)  = kf.deltay_prop;
           nav.deltar(i,:)       = kf.deltar;
-          nav.deltay(i,:)       = kf.deltay;
           nav.wb(i,:)           = wb_corrected;
 
 end
